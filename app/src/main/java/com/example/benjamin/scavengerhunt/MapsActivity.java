@@ -75,8 +75,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     LatLng location1 = new LatLng(50.666707, -120.348493);
     LatLng CAC = new LatLng(50.672682, -120.366000);
     LatLng OM = new LatLng(50.671174, -120.363291);
-    LatLng HOL = new LatLng(50.672000, -120.365257);
+    LatLng BUS = new LatLng(50.671264, -120.368405);
     ArrayList<LatLng> locations = new ArrayList<>();
+    ArrayList<Geofence> geofences = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,9 +116,9 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         //create Geofancing Client
         geofencingClient = LocationServices.getGeofencingClient(this);
 
-//        locations.add(CAC);
-//        locations.add(HOL);
-//        locations.add(OM);
+        locations.add(CAC);
+        locations.add(BUS);
+        locations.add(OM);
 
         locations.add(location1);
 
@@ -155,21 +156,41 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         }
     }
 
-    private Geofence buildGeofence() {
-        Geofence geofence = new Geofence.Builder()
-                .setRequestId("test")
-                .setCircularRegion(location1.latitude, location1.longitude, 200)
+    private void buildGeofence() {
+        geofences.add(new Geofence.Builder()
+                .setRequestId("OM")
+                .setCircularRegion(OM.latitude, OM.longitude, 100)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_ENTER)
-                .setLoiteringDelay(5000)
-                .build();
-        return geofence;
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                .setLoiteringDelay(50000)
+                .build());
+        geofences.add(new Geofence.Builder()
+                .setRequestId("CAC")
+                .setCircularRegion(CAC.latitude, CAC.longitude, 100)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                .setLoiteringDelay(50000)
+                .build());
+        geofences.add(new Geofence.Builder()
+                .setRequestId("BUS")
+                .setCircularRegion(BUS.latitude, BUS.longitude, 100)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                .setLoiteringDelay(50000)
+                .build());
+        geofences.add(new Geofence.Builder()
+                .setRequestId("location1")
+                .setCircularRegion(location1.latitude, location1.longitude, 100)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                .setLoiteringDelay(50000)
+                .build());
     }
 
     private GeofencingRequest getGeofencingRequest() {
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_DWELL);
-        builder.addGeofence(buildGeofence());
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
+        builder.addGeofences(geofences);
         return builder.build();
     }
 
@@ -186,13 +207,16 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
 
     Circle geofanceArea;
 
-    private void drawGeofance() {
-        CircleOptions circleOptions = new CircleOptions()
-                .center(location1)
-                .strokeColor(Color.argb(50, 66, 24, 137))
-                .fillColor(Color.argb(100, 66, 134, 244))
-                .radius(200);
-        geofanceArea = mMap.addCircle(circleOptions);
+    private void drawGeofance(ArrayList<LatLng> list) {
+        for(LatLng l : list){
+            CircleOptions circleOptions = new CircleOptions()
+                    .center(l)
+                    .strokeColor(Color.argb(50, 66, 24, 137))
+                    .fillColor(Color.argb(100, 66, 134, 244))
+                    .radius(100);
+            geofanceArea = mMap.addCircle(circleOptions);
+        }
+
     }
 
     @SuppressLint("MissingPermission")
@@ -226,12 +250,12 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
             mMap.setMyLocationEnabled(true);
             LatLng l = new LatLng(50.666657, -120.348992);
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(l, 15));
-
+            buildGeofence();
             geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
                     .addOnSuccessListener(this, new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            drawGeofance();
+                            drawGeofance(locations);
                             Log.d("mapsActivity", "geofence set successfully.");
                         }
                     });
@@ -300,12 +324,12 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                     mMap.setMyLocationEnabled(true);
                     LatLng l = new LatLng(50.666657, -120.348992);
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(l, 15));
-
+                    buildGeofence();
                     geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
                             .addOnSuccessListener(this, new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
-                                    drawGeofance();
+                                    drawGeofance(locations);
                                     Log.d("mapsActivity", "geofence set successfully.");
                                 }
                             });
