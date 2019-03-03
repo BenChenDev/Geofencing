@@ -2,22 +2,23 @@ package com.example.benjamin.scavengerhunt;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
@@ -46,6 +47,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMyLocationButtonClickListener,
         OnMyLocationClickListener, OnMapReadyCallback {
@@ -56,6 +58,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     private GoogleApiClient googleApiClient = null;
     private int Location_PERMISSION_CODE = 1;
     private GeofencingClient geofencingClient;
+    private int score = 0;
 
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
@@ -70,6 +73,33 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
             }
         }
     };
+
+//    static class GoogleReceiver extends BroadcastReceiver {
+//
+//        MapsActivity mActivity;
+//
+//        public GoogleReceiver(Activity activity){
+//            mActivity = (MapsActivity) activity;
+//        }
+//
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            //Handle the intent here
+//            String id = intent.getStringExtra("ID");
+//            Log.d("ID: ", id);
+//            ArrayList<String> ids = new ArrayList<>();
+//            removeGeofence(ids);
+//        }
+//    }
+
+    private BroadcastReceiver listener = new BroadcastReceiver() {
+        @Override
+        public void onReceive( Context context, Intent intent ) {
+            String id = intent.getStringExtra("ID");
+            Log.d("ID: ", id);
+        }
+    };
+
 
     LatLng home = new LatLng(50.666657, -120.348992);
     LatLng location1 = new LatLng(50.666707, -120.348493);
@@ -122,6 +152,12 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
 
         locations.add(location1);
 
+        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
+        localBroadcastManager.registerReceiver(listener, new IntentFilter("googlegeofence"));
+//        LocalBroadcastManager lbc = LocalBroadcastManager.getInstance(this);
+//        GoogleReceiver receiver = new GoogleReceiver(this);
+//        lbc.registerReceiver(receiver, new IntentFilter("googlegeofence"));
+        //Anything with this intent will be sent to this receiver
     }
 
     protected void createLocationRequest() {
@@ -198,14 +234,12 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         if (pendingIntent != null) {
             return pendingIntent;
         }
-        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
-
+        Intent intent = new Intent(MapsActivity.this, GeofenceTransitionsIntentService.class);
         pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.
                 FLAG_UPDATE_CURRENT);
+
         return pendingIntent;
     }
-
-    Circle geofanceArea;
 
     private void drawGeofance(ArrayList<LatLng> list) {
         for(LatLng l : list){
@@ -214,7 +248,7 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                     .strokeColor(Color.argb(50, 66, 24, 137))
                     .fillColor(Color.argb(100, 66, 134, 244))
                     .radius(100);
-            geofanceArea = mMap.addCircle(circleOptions);
+            mMap.addCircle(circleOptions);
         }
 
     }
@@ -340,4 +374,12 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         }
     }
 
+    private void removeGeofence(ArrayList<String> id){
+        geofencingClient.removeGeofences(id).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                score = score + 10;
+            }
+        });
+    }
 }

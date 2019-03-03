@@ -2,9 +2,13 @@ package com.example.benjamin.scavengerhunt;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Bundle;
+import android.os.ResultReceiver;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingEvent;
 
 import java.util.ArrayList;
@@ -13,12 +17,20 @@ import java.util.List;
 
 public class GeofenceTransitionsIntentService extends IntentService {
 
+//    private ResultReceiver mResultReceiver;
     public GeofenceTransitionsIntentService() {
         super(GeofenceTransitionsIntentService.class.getName());
     }
 
     protected void onHandleIntent(Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
+//        mResultReceiver = intent.getParcelableExtra("RECEIVER");
+
+
+
+//        if(mResultReceiver == null){
+//            Log.d("intent", "resultreceiver is null");
+//        }
         if (geofencingEvent.hasError()) {
             Log.d("IntentService: ", "geofancing event error.");
             return;
@@ -33,7 +45,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
                 // multiple geofences.
                 List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
                 // Get the transition details as a String.
-                String geofenceTransitionDetails = getGeofenceTransitionDetails(
+                getGeofenceTransitionDetails(
                         geofenceTransition,
                         triggeringGeofences
                 );
@@ -44,28 +56,20 @@ public class GeofenceTransitionsIntentService extends IntentService {
                 // Log the error.
                 Log.d("IntentService: ", "***ENTER");
             }
-
-            if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL){
-                Log.d("IntentService: ", "dwell triggered.");
-            }
         }
     }
 
-    private String getGeofenceTransitionDetails(int geofenceTransition, List<Geofence> triggeringGeofences) {
-        ArrayList<String> triggerfanceList = new ArrayList<>();
+    private void getGeofenceTransitionDetails(int geofenceTransition, List<Geofence> triggeringGeofences) {
+//        Bundle bundle = new Bundle();
+        Intent lbcIntent = new Intent("googlegeofence"); //Send to any reciever listening for this
         for (Geofence geofance : triggeringGeofences){
-            triggerfanceList.add(geofance.getRequestId());
+            Log.d("IntentService: ", geofance.getRequestId());
+//            bundle.putString("ID", geofance.getRequestId());
+            lbcIntent.putExtra("ID", geofance.getRequestId());  //Put whatever it is you want the activity to handle
         }
+//        mResultReceiver.send(1,bundle);
 
-        String status = null;
-
-        if(geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL){
-            status = "inside geofance circle!!";
-        } else {
-            status = "not in the circle.";
-        }
-
-        return status;
+        LocalBroadcastManager.getInstance(this).sendBroadcast(lbcIntent);  //Send the intent
     }
 }
 
