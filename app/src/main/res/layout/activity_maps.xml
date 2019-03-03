@@ -9,11 +9,24 @@
     tools:layout_editor_absoluteY="8dp"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TextView
-        android:id="@+id/score"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Scores: " />
+    <RelativeLayout android:layout_height="wrap_content" android:layout_width="match_parent">
+        <TextView
+            android:id="@+id/scoreLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scores: "
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_alignParentLeft="true"/>
+        <TextView
+            android:id="@+id/score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_toRightOf="@id/scoreLabel"/>
+    </RelativeLayout>
+
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:map="http://schemas.android.com/apk/res-auto"
@@ -24,6 +37,27 @@
         android:layout_height="500dp"
         tools:context=".MapsActivity" />
 
+    <TextView
+        android:id="@+id/infor1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="textStart"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:paddingTop="10dp"
+        android:paddingLeft="40dp"
+        android:paddingRight="20dp"/>
+
+    <TextView
+        android:id="@+id/infor2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="textStart"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:paddingTop="10dp"
+        android:paddingLeft="40dp"
+        android:paddingRight="20dp"/>
 </LinearLayout>
 
 

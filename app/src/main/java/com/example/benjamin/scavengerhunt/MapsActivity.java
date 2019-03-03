@@ -21,6 +21,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -59,6 +60,8 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
     private int Location_PERMISSION_CODE = 1;
     private GeofencingClient geofencingClient;
     private int score = 0;
+    //the score
+    TextView num, infor1, infor2;
 
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
@@ -74,39 +77,22 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         }
     };
 
-//    static class GoogleReceiver extends BroadcastReceiver {
-//
-//        MapsActivity mActivity;
-//
-//        public GoogleReceiver(Activity activity){
-//            mActivity = (MapsActivity) activity;
-//        }
-//
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            //Handle the intent here
-//            String id = intent.getStringExtra("ID");
-//            Log.d("ID: ", id);
-//            ArrayList<String> ids = new ArrayList<>();
-//            removeGeofence(ids);
-//        }
-//    }
 
     private BroadcastReceiver listener = new BroadcastReceiver() {
         @Override
         public void onReceive( Context context, Intent intent ) {
             String id = intent.getStringExtra("ID");
             Log.d("ID: ", id);
+            ArrayList<String> ids = new ArrayList<>();
+            ids.add(id);
+            removeGeofence(ids);
         }
     };
-
-
-    LatLng home = new LatLng(50.666657, -120.348992);
-    LatLng location1 = new LatLng(50.666707, -120.348493);
+//
+//    LatLng HOME = new LatLng(50.666707, -120.348493);
     LatLng CAC = new LatLng(50.672682, -120.366000);
     LatLng OM = new LatLng(50.671174, -120.363291);
     LatLng BUS = new LatLng(50.671264, -120.368405);
-    ArrayList<LatLng> locations = new ArrayList<>();
     ArrayList<Geofence> geofences = new ArrayList<>();
 
     @Override
@@ -114,6 +100,11 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        num = findViewById(R.id.score);
+        num.setText(String.valueOf(score));
+        infor1 = findViewById(R.id.infor1);
+        infor1.setText("Walk into the geofence area to collect your points!");
+        infor2 = findViewById(R.id.infor2);
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
@@ -145,12 +136,6 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
 
         //create Geofancing Client
         geofencingClient = LocationServices.getGeofencingClient(this);
-
-        locations.add(CAC);
-        locations.add(BUS);
-        locations.add(OM);
-
-        locations.add(location1);
 
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
         localBroadcastManager.registerReceiver(listener, new IntentFilter("googlegeofence"));
@@ -198,29 +183,29 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                 .setCircularRegion(OM.latitude, OM.longitude, 100)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
-                .setLoiteringDelay(50000)
+                .setLoiteringDelay(20000)
                 .build());
         geofences.add(new Geofence.Builder()
                 .setRequestId("CAC")
                 .setCircularRegion(CAC.latitude, CAC.longitude, 100)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
-                .setLoiteringDelay(50000)
+                .setLoiteringDelay(20000)
                 .build());
         geofences.add(new Geofence.Builder()
                 .setRequestId("BUS")
                 .setCircularRegion(BUS.latitude, BUS.longitude, 100)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
-                .setLoiteringDelay(50000)
+                .setLoiteringDelay(20000)
                 .build());
-        geofences.add(new Geofence.Builder()
-                .setRequestId("location1")
-                .setCircularRegion(location1.latitude, location1.longitude, 100)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
-                .setLoiteringDelay(50000)
-                .build());
+//        geofences.add(new Geofence.Builder()
+//                .setRequestId("HOME")
+//                .setCircularRegion(HOME.latitude, HOME.longitude, 100)
+//                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+//                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+//                .setLoiteringDelay(20000)
+//                .build());
     }
 
     private GeofencingRequest getGeofencingRequest() {
@@ -241,16 +226,35 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         return pendingIntent;
     }
 
-    private void drawGeofance(ArrayList<LatLng> list) {
-        for(LatLng l : list){
-            CircleOptions circleOptions = new CircleOptions()
-                    .center(l)
-                    .strokeColor(Color.argb(50, 66, 24, 137))
-                    .fillColor(Color.argb(100, 66, 134, 244))
-                    .radius(100);
-            mMap.addCircle(circleOptions);
-        }
+    private Circle cac, om, bus, home;
+    private void drawGeofance() {
 
+        CircleOptions circleOptions = new CircleOptions()
+                .center(CAC)
+                .strokeColor(Color.argb(50, 66, 24, 137))
+                .fillColor(Color.argb(100, 66, 134, 244))
+                .radius(100);
+        cac = mMap.addCircle(circleOptions);
+
+        CircleOptions circleOptions1 = new CircleOptions()
+                .center(OM)
+                .strokeColor(Color.argb(50, 66, 24, 137))
+                .fillColor(Color.argb(100, 66, 134, 244))
+                .radius(100);
+        om = mMap.addCircle(circleOptions1);
+
+        CircleOptions circleOptions2 = new CircleOptions()
+                .center(BUS)
+                .strokeColor(Color.argb(50, 66, 24, 137))
+                .fillColor(Color.argb(100, 66, 134, 244))
+                .radius(100);
+        bus = mMap.addCircle(circleOptions2);
+//        CircleOptions circleOptions3 = new CircleOptions()
+//                .center(HOME)
+//                .strokeColor(Color.argb(50, 66, 24, 137))
+//                .fillColor(Color.argb(100, 66, 134, 244))
+//                .radius(100);
+//        home = mMap.addCircle(circleOptions3);
     }
 
     @SuppressLint("MissingPermission")
@@ -282,17 +286,25 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
             }
             startLocationUpdate();
             mMap.setMyLocationEnabled(true);
-            LatLng l = new LatLng(50.666657, -120.348992);
+            LatLng l = new LatLng(50.672682, -120.366000);
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(l, 15));
             buildGeofence();
             geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
                     .addOnSuccessListener(this, new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            drawGeofance(locations);
+                            drawGeofance();
                             Log.d("mapsActivity", "geofence set successfully.");
                         }
+                    })
+                    .addOnFailureListener(this, new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.d("mapsActivity", "geofence set failed.");
+
+                        }
                     });
+
 
         } else {
             request_permission();
@@ -356,14 +368,14 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
                 startLocationUpdate();
                 if(mMap != null){
                     mMap.setMyLocationEnabled(true);
-                    LatLng l = new LatLng(50.666657, -120.348992);
+                    LatLng l = new LatLng(50.672682, -120.366000);
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(l, 15));
                     buildGeofence();
                     geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
                             .addOnSuccessListener(this, new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
-                                    drawGeofance(locations);
+                                    drawGeofance();
                                     Log.d("mapsActivity", "geofence set successfully.");
                                 }
                             });
@@ -374,12 +386,59 @@ public class MapsActivity extends FragmentActivity implements OnMyLocationButton
         }
     }
 
-    private void removeGeofence(ArrayList<String> id){
+    private void removeGeofence(final ArrayList<String> id){
         geofencingClient.removeGeofences(id).addOnSuccessListener(new OnSuccessListener<Void>() {
+
             @Override
             public void onSuccess(Void aVoid) {
-                score = score + 10;
+                Log.d("remove:", "removeGeofence successfully.");
+                for(String i : id){
+                    Log.d("remove:", i );
+                    switch(i){
+//                        case "HOME":
+//                            if(home != null){
+//                                home.remove();
+//                                home = null;
+//                                score = score + 10;
+//                            }
+//                            break;
+                        case "OM":
+                            if(om != null){
+                                om.remove();
+                                om = null;
+                                score = score + 10;
+                            }
+                            break;
+                        case "BUS":
+                            if(bus != null){
+                                bus.remove();
+                                bus = null;
+                                score = score + 10;
+                            }
+                            break;
+                        case "CAC":
+                            if(cac != null){
+                                cac.remove();
+                                cac = null;
+                                score = score + 10;
+                            }
+                            break;
+                    }
+                }
+                if(home != null){
+                    Log.d("check circle","home circle still here.");
+                }
+
+                if(om == null && cac == null && bus == null){
+                    Log.d("win","won game");
+                    String win = "Congratulation! You Won the game!";
+                    String s = "Your total scores are: " + score;
+                    infor1.setText(win);
+                    infor2.setText(s);
+                }
+                num.setText(String.valueOf(score));
             }
         });
     }
+
 }
